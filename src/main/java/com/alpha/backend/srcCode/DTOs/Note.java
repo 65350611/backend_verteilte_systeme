@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
-@Qualifier("Notiz")
+@Qualifier("Note")
 public class Note {
     private String id;
     private String titel;

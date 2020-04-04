@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 
 
 @Component
-@Qualifier("SessionToken")
+@Qualifier("UserToken")
 public class UserToken {
 
     private String user_token;

@@ -1,19 +1,22 @@
 package com.alpha.backend.srcCode.Controller;
 
-import com.sun.org.apache.xpath.internal.objects.XNull;
 import com.alpha.backend.srcCode.B64Decoder;
 import com.alpha.backend.srcCode.DTOs.Note;
+import com.alpha.backend.srcCode.DTOs.Password;
 import com.alpha.backend.srcCode.DTOs.User;
 import com.alpha.backend.srcCode.DTOs.UserToken;
 import com.alpha.backend.srcCode.UserTokenCreator;
+import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.Null;
 import java.util.ArrayList;
 import java.util.List;
 
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 public class Controller {
 
@@ -25,8 +28,6 @@ public class Controller {
     @Autowired
     @Qualifier("B64Decoder")
     final B64Decoder b64Decoder = new B64Decoder();
-
-
 
 
     List<User> userList = new ArrayList<>();
@@ -57,7 +58,8 @@ public class Controller {
 
     // LOGIN
     @RequestMapping(value = "/users/login", method = RequestMethod.GET)
-    public ResponseEntity<UserToken> userTokenResponseEntity(@RequestParam String username,@RequestParam String pwd) {
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    public ResponseEntity<UserToken> userTokenResponseEntity(@RequestParam String username, @RequestParam String pwd) {
         // TODO: 02.04.2020 Nach DB Anbindung muss das eingehende passwort mit dem in der DB abgeglichen werden. Falls korrekt wird der Usertoken zurückgegeben.
         if (pwd.contentEquals("testpwd")) {
             return ResponseEntity.status(200).body(userTokenCreator.createUserToken(username));
@@ -68,16 +70,20 @@ public class Controller {
 
     // SEND PASSWORD
     @RequestMapping(value = "/users/password", method = RequestMethod.GET)
-    public ResponseEntity<String> forgetPassword(@RequestParam String username, @RequestParam String email) {
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    public ResponseEntity<Password> forgetPassword(@RequestParam String username, @RequestParam String email) {
         // TODO: 02.04.2020 Nach DB Anbindung mit username und email das korrekte passwort aus DB abfragen und zurücksenden. Bescheuert? Ja.
-        if (username.contentEquals("Testuser") && email.contentEquals("Testmail")) {
-            return ResponseEntity.status(200).body("Hier sollte eigentlich aus der DB das korrekte Passwort geholt werden und weiterverschickt werden.");
+        if (username.contentEquals("Testuser") && email.contentEquals("Testmail@test.de")) {
+           // String pwd = "Hier sollte eigentlich aus der DB das korrekte Passwort geholt werden und weiterverschickt werden.";
+            Password password = new Password("start123");
+
+            return ResponseEntity.status(200).body(password);
         } else return ResponseEntity.status(403).body(null);
     }
 
     // Registrieren
     @RequestMapping(value = "/users", method = RequestMethod.POST)
-    public ResponseEntity<XNull> registrateResponseEntity(@RequestBody User user) {
+    public ResponseEntity<Null> registrateResponseEntity(@RequestBody User user) {
         // TODO: 03.04.2020 if (DB.registrateUser(user)){return ResponseEntity.status(200).build();}else{return ResponseEntity.status(400).build();}
 
         return ResponseEntity.status(200).build();
@@ -96,7 +102,7 @@ public class Controller {
 
     // DELETE Eintrag von User
     @RequestMapping(value = "/documents", method = RequestMethod.DELETE)
-    public ResponseEntity<XNull> deleteResponseEntity(@RequestParam String user_token, @RequestParam String eintrag_id) {
+    public ResponseEntity<Null> deleteResponseEntity(@RequestParam String user_token, @RequestParam String eintrag_id) {
         User user = new User(b64Decoder.b64Decoder(user_token));
         // TODO: 03.04.2020 Delete Eintrag mit eintrag_id von User user aus DB
         return ResponseEntity.status(204).build();
@@ -105,18 +111,18 @@ public class Controller {
 
     // Neuen Eintrag Speichern.
     @RequestMapping(value = "/documents", method = RequestMethod.POST)
-    public ResponseEntity<XNull> createNewNote(@RequestParam String user_token, @RequestBody Note note){
+    public ResponseEntity<Null> createNewNote(@RequestParam String user_token, @RequestBody Note note) {
         User user = new User(b64Decoder.b64Decoder(user_token));
         // TODO: 03.04.2020 DB.createNewNote(user, note);
-        if (user.getUsername().contentEquals("Testuser")){
+        if (user.getUsername().contentEquals("Testuser")) {
             return ResponseEntity.status(201).build();
-        }else return ResponseEntity.status(403).build();
+        } else return ResponseEntity.status(403).build();
     }
 
 
     // Vorhandenen Eintrag überschreiben
     @RequestMapping(value = "/documents", method = RequestMethod.PUT)
-    public ResponseEntity<XNull> patchExistingNote(@RequestParam String user_token, @RequestBody Note note){
+    public ResponseEntity<Null> patchExistingNote(@RequestParam String user_token, @RequestBody Note note) {
         User user = new User(b64Decoder.b64Decoder(user_token));
         // TODO: 03.04.2020  DB.patchExistingNode(user, note);
         return ResponseEntity.status(204).build();
