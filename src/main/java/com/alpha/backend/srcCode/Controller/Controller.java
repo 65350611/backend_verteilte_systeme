@@ -82,6 +82,7 @@ public class Controller {
 
     // Registrieren
     @RequestMapping(value = "/users", method = RequestMethod.POST)
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<Null> registrateResponseEntity(@RequestBody User user) {
         // TODO: 03.04.2020 if (DB.registrateUser(user)){return ResponseEntity.status(200).build();}else{return ResponseEntity.status(400).build();}
 
@@ -90,6 +91,7 @@ public class Controller {
 
     // Main Paige Get documents
     @RequestMapping(value = "/documents", method = RequestMethod.GET)
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<List<Note>> notizResponseEntity(@RequestParam String user_token) {
         User user = new User(b64Decoder.b64Decoder(user_token));
         // TODO: 03.04.2020 Aus der DB die Notizen des user holen und in den Response Body packen. Eventuell als Liste oder als Map.
@@ -101,6 +103,7 @@ public class Controller {
 
     // DELETE Eintrag von User
     @RequestMapping(value = "/documents", method = RequestMethod.DELETE)
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<Null> deleteResponseEntity(@RequestParam String user_token, @RequestParam String eintrag_id) {
         User user = new User(b64Decoder.b64Decoder(user_token));
         // TODO: 03.04.2020 Delete Eintrag mit eintrag_id von User user aus DB
@@ -110,6 +113,7 @@ public class Controller {
 
     // Neuen Eintrag Speichern.
     @RequestMapping(value = "/documents", method = RequestMethod.POST)
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<Null> createNewNote(@RequestParam String user_token, @RequestBody Note note) {
         User user = new User(b64Decoder.b64Decoder(user_token));
         // TODO: 03.04.2020 DB.createNewNote(user, note);
@@ -121,6 +125,7 @@ public class Controller {
 
     // Vorhandenen Eintrag überschreiben
     @RequestMapping(value = "/documents", method = RequestMethod.PUT)
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<Null> patchExistingNote(@RequestParam String user_token, @RequestBody Note note) {
         User user = new User(b64Decoder.b64Decoder(user_token));
         // TODO: 03.04.2020  DB.patchExistingNode(user, note);
