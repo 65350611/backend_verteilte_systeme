@@ -6,7 +6,6 @@ import com.alpha.backend.srcCode.DTOs.Password;
 import com.alpha.backend.srcCode.DTOs.User;
 import com.alpha.backend.srcCode.DTOs.UserToken;
 import com.alpha.backend.srcCode.UserTokenCreator;
-import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -59,9 +58,9 @@ public class Controller {
     // LOGIN
     @RequestMapping(value = "/users/login", method = RequestMethod.GET)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<UserToken> userTokenResponseEntity(@RequestParam String username, @RequestParam String pwd) {
+    public ResponseEntity<UserToken> userTokenResponseEntity(@RequestParam String username, @RequestParam String password) {
         // TODO: 02.04.2020 Nach DB Anbindung muss das eingehende passwort mit dem in der DB abgeglichen werden. Falls korrekt wird der Usertoken zurückgegeben.
-        if (pwd.contentEquals("testpwd")) {
+        if (password.contentEquals("testpwd")) {
             return ResponseEntity.status(200).body(userTokenCreator.createUserToken(username));
 
         } else return ResponseEntity.status(403).body(null);
@@ -74,7 +73,7 @@ public class Controller {
     public ResponseEntity<Password> forgetPassword(@RequestParam String username, @RequestParam String email) {
         // TODO: 02.04.2020 Nach DB Anbindung mit username und email das korrekte passwort aus DB abfragen und zurücksenden. Bescheuert? Ja.
         if (username.contentEquals("Testuser") && email.contentEquals("Testmail@test.de")) {
-           // String pwd = "Hier sollte eigentlich aus der DB das korrekte Passwort geholt werden und weiterverschickt werden.";
+            // String pwd = "Hier sollte eigentlich aus der DB das korrekte Passwort geholt werden und weiterverschickt werden.";
             Password password = new Password("start123");
 
             return ResponseEntity.status(200).body(password);
