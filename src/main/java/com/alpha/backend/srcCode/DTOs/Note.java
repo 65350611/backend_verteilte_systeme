@@ -11,7 +11,8 @@ public class Note {
     private String datum;
     private String inhalt;
 
-    public Note(){}
+    public Note() {
+    }
 
     public Note(String id, String titel, String datum, String inhalt) {
         this.id = id;

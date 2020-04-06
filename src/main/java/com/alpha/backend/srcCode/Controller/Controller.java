@@ -92,7 +92,7 @@ public class Controller {
     // Main Paige Get documents
     @RequestMapping(value = "/documents", method = RequestMethod.GET)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<List<Note>> notizResponseEntity(@RequestParam String user_token) {
+    public ResponseEntity<List<Note>> noteResponseEntity(@RequestParam String user_token) {
         User user = new User(b64Decoder.b64Decoder(user_token));
         // TODO: 03.04.2020 Aus der DB die Notizen des user holen und in den Response Body packen. Eventuell als Liste oder als Map.
         Note note = new Note("1", "Einkaufsliste", "18.02.1994", "Testinhalt");
