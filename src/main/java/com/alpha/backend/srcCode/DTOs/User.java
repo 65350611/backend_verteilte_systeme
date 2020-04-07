@@ -1,4 +1,5 @@
 package com.alpha.backend.srcCode.DTOs;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -12,12 +13,14 @@ public class User {
 
     private String password;
 
-    public User(){}
+    private int userId;
+    public User() {
+    }
 
-    public User(String username){
+    public User(String username) {
         this.username = username;
     }
-    // TODO: 02.04.2020 ist ein get passwort überhaupt notwendig?
+
     public String getPassword() {
         return password;
     }
@@ -40,6 +43,14 @@ public class User {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.alpha.backend.srcCode.Controller;
 
 import com.alpha.backend.srcCode.B64Decoder;
+import com.alpha.backend.srcCode.DB.DBConnector;
 import com.alpha.backend.srcCode.DTOs.Note;
 import com.alpha.backend.srcCode.DTOs.Password;
 import com.alpha.backend.srcCode.DTOs.User;
@@ -9,9 +10,17 @@ import com.alpha.backend.srcCode.UserTokenCreator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.constraints.Null;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,14 +31,21 @@ public class Controller {
 
     @Autowired
     @Qualifier("UserTokenCreator")
-    UserTokenCreator userTokenCreator;
+    final UserTokenCreator userTokenCreator = new UserTokenCreator();
 
     @Autowired
     @Qualifier("B64Decoder")
     final B64Decoder b64Decoder = new B64Decoder();
 
+    @Autowired
+    @Qualifier("DBConnector")
+    final DBConnector dbConnector = new DBConnector();
+
 
     List<User> userList = new ArrayList<>();
+
+    public Controller() throws SQLException {
+    }
 
 
     @RequestMapping("/hello")
@@ -58,55 +74,74 @@ public class Controller {
     // LOGIN
     @RequestMapping(value = "/users/login", method = RequestMethod.GET)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<UserToken> userTokenResponseEntity(@RequestParam String username, @RequestParam String password) {
-        // TODO: 02.04.2020 Nach DB Anbindung muss das eingehende passwort mit dem in der DB abgeglichen werden. Falls korrekt wird der Usertoken zurückgegeben.
-        if (password.contentEquals("testpwd")) {
+    public ResponseEntity<UserToken> userTokenResponseEntity(@RequestParam String username, @RequestParam String password) throws SQLException {
+        if (dbConnector.loadUserFromDatabase(username, dbConnector.getStatement()).get(0).toString().contentEquals(password)) {
             return ResponseEntity.status(200).body(userTokenCreator.createUserToken(username));
-
         } else return ResponseEntity.status(403).body(null);
+
+//        if (password.contentEquals("testpwd")) {
+//            return ResponseEntity.status(200).body(userTokenCreator.createUserToken(username));
+//
+//        } else return ResponseEntity.status(403).body(null);
     }
 
 
     // SEND PASSWORD
     @RequestMapping(value = "/users/password", method = RequestMethod.GET)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<Password> forgetPassword(@RequestParam String username, @RequestParam String email) {
-        // TODO: 02.04.2020 Nach DB Anbindung mit username und email das korrekte passwort aus DB abfragen und zurücksenden. Bescheuert? Ja.
-        if (username.contentEquals("Testuser") && email.contentEquals("Testmail@test.de")) {
-            // String pwd = "Hier sollte eigentlich aus der DB das korrekte Passwort geholt werden und weiterverschickt werden.";
-            Password password = new Password("start123");
+    public ResponseEntity<Password> forgetPassword(@RequestParam String username, @RequestParam String email) throws SQLException {
 
+        if (dbConnector.loadUserFromDatabase(username, dbConnector.getStatement()).get(2).toString().contentEquals(email)) {
+            Password password = new Password(dbConnector.loadUserFromDatabase(username, dbConnector.getStatement()).get(0).toString());
             return ResponseEntity.status(200).body(password);
         } else return ResponseEntity.status(403).body(null);
+
+//        if (username.contentEquals("Testuser") && email.contentEquals("Testmail@test.de")) {
+//            // String pwd = "Hier sollte eigentlich aus der DB das korrekte Passwort geholt werden und weiterverschickt werden.";
+//            Password password = new Password("start123");
+//
+//            return ResponseEntity.status(200).body(password);
+//        } else return ResponseEntity.status(403).body(null);
     }
 
     // Registrieren
     @RequestMapping(value = "/users", method = RequestMethod.POST)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<Null> registrateResponseEntity(@RequestBody User user) {
-        // TODO: 03.04.2020 if (DB.registrateUser(user)){return ResponseEntity.status(200).build();}else{return ResponseEntity.status(400).build();}
-
-        return ResponseEntity.status(200).build();
+    public ResponseEntity<Null> registrateResponseEntity(@RequestBody User user) throws SQLException {
+        if (dbConnector.addNewUser(user.getUsername(), user.getPassword(), user.getEmail(), dbConnector.getStatement())) {
+            return ResponseEntity.status(201).build();
+        } else return ResponseEntity.status(422).build();
     }
 
     // Main Paige Get documents
     @RequestMapping(value = "/documents", method = RequestMethod.GET)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<List<Note>> noteResponseEntity(@RequestParam String user_token) {
+    public ResponseEntity<List<Note>> noteResponseEntity(@RequestParam String user_token) throws SQLException {
         User user = new User(b64Decoder.b64Decoder(user_token));
-        // TODO: 03.04.2020 Aus der DB die Notizen des user holen und in den Response Body packen. Eventuell als Liste oder als Map.
-        Note note = new Note("1", "Einkaufsliste", "18.02.1994", "Testinhalt");
+        user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername(), dbConnector.getStatement()).get(1));
         List<Note> notes = new ArrayList<>();
-        notes.add(note);
+
+        List<List<String>> documents = dbConnector.loadAllTablesFromUser(user.getUserId(), dbConnector.getStatement());
+        for (List<String> notesFromTheDatabase : documents) {
+            notes.add(new Note(notesFromTheDatabase.get(0), notesFromTheDatabase.get(1), notesFromTheDatabase.get(2)));
+        }
+        // TODO: 07.04.2020 FALLS DIE FOREACH NICHT FUNKTIONIERT DIE FOR SCHLEIFE VERWENDEN!
+
+//        for (int i = 0; i < documents.size(); i++) {
+//            notes.add(new Note(documents.get(i).get(0), documents.get(i).get(1), documents.get(i).get(2)));
+//        }
         return ResponseEntity.status(200).body(notes);
     }
 
     // DELETE Eintrag von User
     @RequestMapping(value = "/documents", method = RequestMethod.DELETE)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<Null> deleteResponseEntity(@RequestParam String user_token, @RequestParam String eintrag_id) {
+    public ResponseEntity<Null> deleteResponseEntity(@RequestParam String user_token, @RequestParam int eintrag_id) throws SQLException {
+        // TODO: 07.04.2020 NICHT FERTIG UND FUNKTIONIERT NICHT RICHTIG!
         User user = new User(b64Decoder.b64Decoder(user_token));
-        // TODO: 03.04.2020 Delete Eintrag mit eintrag_id von User user aus DB
+        if (dbConnector.loadUserFromDatabase(user.getUsername(), dbConnector.getStatement()).get(1) != null) {
+            dbConnector.deleteNote(eintrag_id, dbConnector.getStatement());
+        }
         return ResponseEntity.status(204).build();
 
     }
@@ -114,10 +149,9 @@ public class Controller {
     // Neuen Eintrag Speichern.
     @RequestMapping(value = "/documents", method = RequestMethod.POST)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<Null> createNewNote(@RequestParam String user_token, @RequestBody Note note) {
+    public ResponseEntity<Null> createNewNote(@RequestParam String user_token, @RequestBody Note note) throws ParseException, SQLException {
         User user = new User(b64Decoder.b64Decoder(user_token));
-        // TODO: 03.04.2020 DB.createNewNote(user, note);
-        if (user.getUsername().contentEquals("Testuser")) {
+        if (dbConnector.addNewNote(user.getUsername(), note.getTitel(), note.getInhalt(), (java.sql.Date) new SimpleDateFormat("dd/MM/yyyy").parse(note.getDatum()), dbConnector.getStatement())) {
             return ResponseEntity.status(201).build();
         } else return ResponseEntity.status(403).build();
     }
@@ -126,8 +160,11 @@ public class Controller {
     // Vorhandenen Eintrag überschreiben
     @RequestMapping(value = "/documents", method = RequestMethod.PUT)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<Null> patchExistingNote(@RequestParam String user_token, @RequestBody Note note) {
+    public ResponseEntity<Null> patchExistingNote(@RequestParam String user_token, @RequestBody Note note) throws SQLException {
+        // TODO: 07.04.2020 NICHT FERTIG UND FUNKTIONIERT NICHT RICHTIG!
         User user = new User(b64Decoder.b64Decoder(user_token));
+        user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername(), dbConnector.getStatement()).get(1));
+        dbConnector.deleteNote(user.getUserId(), dbConnector.getStatement());
         // TODO: 03.04.2020  DB.patchExistingNode(user, note);
         return ResponseEntity.status(204).build();
     }

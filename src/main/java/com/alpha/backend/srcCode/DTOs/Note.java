@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Qualifier("Note")
 public class Note {
-    private String id;
+
     private String titel;
     private String datum;
     private String inhalt;
@@ -14,20 +14,13 @@ public class Note {
     public Note() {
     }
 
-    public Note(String id, String titel, String datum, String inhalt) {
-        this.id = id;
+    public Note(String titel, String inhalt, String datum) {
         this.titel = titel;
         this.datum = datum;
         this.inhalt = inhalt;
     }
 
-    public String getId() {
-        return id;
-    }
 
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getTitel() {
         return titel;

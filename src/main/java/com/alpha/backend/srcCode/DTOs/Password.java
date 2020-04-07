@@ -7,7 +7,10 @@ import org.springframework.stereotype.Component;
 @Qualifier("Password")
 public class Password {
     String password;
-    public Password(){}
+
+    public Password() {
+    }
+
     public Password(String password) {
         this.password = password;
     }
