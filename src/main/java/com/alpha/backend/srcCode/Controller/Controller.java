@@ -1,4 +1,19 @@
 package com.alpha.backend.srcCode.Controller;
+/*
+ *********************************************************************************
+ * Copyright 2020 JONATHAN SMITH
+ *
+ * You may not use this file except in compliance
+ * with the License. You may obtain a Copy of the License by asking the
+ * Copyright Owner JONATHAN SMITH
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ *********************************************************************************
+ */
 
 import com.alpha.backend.srcCode.B64Decoder;
 import com.alpha.backend.srcCode.DB.DBConnector;
@@ -71,22 +86,18 @@ public class Controller {
 //    Hier beginnt der spaßige Teil.
 //    gibt standardmäßig ein Json zurück
 
-    // LOGIN
+    // LOGIN CHECKED
     @RequestMapping(value = "/users/login", method = RequestMethod.GET)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<UserToken> userTokenResponseEntity(@RequestParam String username, @RequestParam String password) throws SQLException {
+
         if (dbConnector.loadUserFromDatabase(username, dbConnector.getStatement()).get(0).toString().contentEquals(password)) {
             return ResponseEntity.status(200).body(userTokenCreator.createUserToken(username));
         } else return ResponseEntity.status(403).body(null);
-
-//        if (password.contentEquals("testpwd")) {
-//            return ResponseEntity.status(200).body(userTokenCreator.createUserToken(username));
-//
-//        } else return ResponseEntity.status(403).body(null);
     }
 
 
-    // SEND PASSWORD
+    // SEND PASSWORD CHECKED
     @RequestMapping(value = "/users/password", method = RequestMethod.GET)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<Password> forgetPassword(@RequestParam String username, @RequestParam String email) throws SQLException {
@@ -104,7 +115,7 @@ public class Controller {
 //        } else return ResponseEntity.status(403).body(null);
     }
 
-    // Registrieren
+    // Registrieren CHECKED
     @RequestMapping(value = "/users", method = RequestMethod.POST)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<Null> registrateResponseEntity(@RequestBody User user) throws SQLException {
@@ -113,7 +124,7 @@ public class Controller {
         } else return ResponseEntity.status(422).build();
     }
 
-    // Main Paige Get documents
+    // Main Paige Get documents CHECKED
     @RequestMapping(value = "/documents", method = RequestMethod.GET)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<List<Note>> noteResponseEntity(@RequestParam String user_token) throws SQLException {
