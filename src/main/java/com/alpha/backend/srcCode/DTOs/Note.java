@@ -21,7 +21,6 @@ public class Note {
     }
 
 
-
     public String getTitel() {
         return titel;
     }

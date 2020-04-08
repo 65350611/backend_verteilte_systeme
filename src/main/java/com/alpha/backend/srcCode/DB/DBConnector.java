@@ -23,12 +23,12 @@ public class DBConnector {
         return statement;
     }
 
-    public DBConnector(String placeholder) {
+    public DBConnector(String placeholder) throws SQLException {
     }
 
-    public DBConnector() {
+    public DBConnector() throws SQLException {
         try {
-            this.connection = DriverManager.getConnection("jdbc:mysql://165.22.78.137:3306/Test", "root", "");
+            this.connection = DriverManager.getConnection("jdbc:mysql://165.22.78.137:3306/test", "root", "");
             this.statement = connection.createStatement();
 
         } catch (Exception e) {
@@ -71,6 +71,7 @@ public class DBConnector {
     }
 
     public boolean addNewUser(String username, String password, String email, Statement statement) throws SQLException {
+
         statement.addBatch("INSERT INTO usertabelle (nutzername, passwort, email) VALUES ('" + username + "','" + password + "','" + email + "')");
         statement.executeBatch();
         if (statement.executeQuery("select nutzername from usertabelle where nutzername='" + username + "';").toString() == username) {

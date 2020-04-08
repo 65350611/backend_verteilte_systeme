@@ -39,7 +39,7 @@ public class Controller {
 
     @Autowired
     @Qualifier("DBConnector")
-    final DBConnector dbConnector = new DBConnector();
+    DBConnector dbConnector = new DBConnector();
 
 
     List<User> userList = new ArrayList<>();
