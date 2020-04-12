@@ -15,17 +15,15 @@ package com.alpha.backend.srcCode.DB;
  *********************************************************************************
  */
 
+import com.alpha.backend.srcCode.DTOs.NoteId;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,15 +84,6 @@ public class DBConnector {
         return notesFromUserForReturnment;
     }
 
-    public boolean addNewNote(String username, String title, String content, Date date, Statement statement) throws SQLException {
-        statement.addBatch("INSERT INTO dokumententabelle (title, datum, inhalt, eigentuemerid) VALUES('" + title + "','" + date + "','" + content +
-                "','" + loadUserFromDatabase(username, statement).get(1) + "')");
-        statement.executeBatch();
-        if (statement.executeQuery("select title from dokumententabelle where title='" + title + "';").toString() == title) {
-            return true;
-        } else return false;
-    }
-
 
     public void deleteNote(int eintrag_id, Statement statement) throws SQLException {
         statement.addBatch("DELETE * FROM dokumententabelle WHERE eigentuemerid='" + eintrag_id + "';");
@@ -102,16 +91,16 @@ public class DBConnector {
     }
 
 
-    public boolean addNewUser(String username, String password, String email, Statement statement) throws SQLException{
+    public boolean addNewUser(String username, String password, String email, Statement statement) throws SQLException {
 
         statement.addBatch("INSERT INTO usertabelle (nutzername, passwort, email) VALUES ('" + username + "','" + password + "','" + email + "')");
         statement.executeBatch();
         return checkIfNewUserWasCreated(username);
     }
 
-    private boolean checkIfNewUserWasCreated(String username) throws SQLException{
-        Statement statement1 = connection.createStatement();
-        ResultSet rs = statement1.executeQuery("select nutzername from usertabelle where nutzername='" + username + "';");
+    private boolean checkIfNewUserWasCreated(String username) throws SQLException {
+        Statement st = connection.createStatement();
+        ResultSet rs = st.executeQuery("select nutzername from usertabelle where nutzername='" + username + "';");
         String nutzername = "";
         if (rs.next()) {
             nutzername = rs.getString("nutzername");
@@ -121,4 +110,37 @@ public class DBConnector {
             return true;
         } else return false;
     }
+
+    public boolean addNewNote(String username, String title, String content, String date, Statement statement) throws SQLException {
+        statement.addBatch("INSERT INTO dokumententabelle (title, datum, inhalt, eigentuemerid) VALUES('" + title + "','" + date + "','" + content +
+                "','" + loadUserFromDatabase(username, statement).get(1) + "')");
+        statement.executeBatch();
+        return checkIfNewNoteWasSaved(title);
+    }
+
+    private boolean checkIfNewNoteWasSaved(String title) throws SQLException {
+        Statement st = connection.createStatement();
+
+        ResultSet rs = st.executeQuery("select title from dokumententabelle where title='" + title + "';");
+        String titel = "";
+        if (rs.next()) {
+            titel = rs.getString("title");
+        }
+        if (titel.contentEquals(title)) {
+            return true;
+        } else return false;
+    }
+    public NoteId getIdFromNewlyCreatedNote() throws SQLException {
+        Statement st = connection.createStatement();
+        Integer noteId = 0;
+        ResultSet rs = st.executeQuery("select max(id) from dokumententabelle;");
+        if (rs.next()){
+            noteId = rs.getInt("max(id)");
+        }
+        NoteId id = new NoteId();
+        id.setElement_id(noteId);
+
+        return id;
+    }
+
 }

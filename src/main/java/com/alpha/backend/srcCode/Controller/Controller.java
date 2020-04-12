@@ -18,6 +18,7 @@ package com.alpha.backend.srcCode.Controller;
 import com.alpha.backend.srcCode.B64Decoder;
 import com.alpha.backend.srcCode.DB.DBConnector;
 import com.alpha.backend.srcCode.DTOs.Note;
+import com.alpha.backend.srcCode.DTOs.NoteId;
 import com.alpha.backend.srcCode.DTOs.Password;
 import com.alpha.backend.srcCode.DTOs.User;
 import com.alpha.backend.srcCode.DTOs.UserToken;
@@ -27,6 +28,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,8 +36,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.constraints.Null;
 import java.sql.SQLException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -127,20 +127,20 @@ public class Controller {
     // Main Paige Get documents CHECKED
     @RequestMapping(value = "/documents", method = RequestMethod.GET)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<List<Note>> noteResponseEntity(@RequestParam String user_token) throws SQLException {
+    public ResponseEntity<List<Note>> noteResponseEntity(@RequestHeader String user_token) throws SQLException {
         User user = new User(b64Decoder.b64Decoder(user_token));
         user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername(), dbConnector.getStatement()).get(1));
         List<Note> notes = new ArrayList<>();
 
         List<List<String>> documents = dbConnector.loadAllTablesFromUser(user.getUserId(), dbConnector.getStatement());
-        for (List<String> notesFromTheDatabase : documents) {
-            notes.add(new Note(notesFromTheDatabase.get(0), notesFromTheDatabase.get(1), notesFromTheDatabase.get(2)));
-        }
+//        for (List<String> notesFromTheDatabase : documents) {
+//            notes.add(new Note(notesFromTheDatabase.get(0), notesFromTheDatabase.get(1), notesFromTheDatabase.get(2)));
+//        }
         // TODO: 07.04.2020 FALLS DIE FOREACH NICHT FUNKTIONIERT DIE FOR SCHLEIFE VERWENDEN!
 
-//        for (int i = 0; i < documents.size(); i++) {
-//            notes.add(new Note(documents.get(i).get(0), documents.get(i).get(1), documents.get(i).get(2)));
-//        }
+        for (int i = 0; i < documents.size(); i++) {
+            notes.add(new Note(documents.get(i).get(0), documents.get(i).get(1), documents.get(i).get(2)));
+        }
         return ResponseEntity.status(200).body(notes);
     }
 
@@ -160,10 +160,11 @@ public class Controller {
     // Neuen Eintrag Speichern.
     @RequestMapping(value = "/documents", method = RequestMethod.POST)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<Null> createNewNote(@RequestParam String user_token, @RequestBody Note note) throws ParseException, SQLException {
+    public ResponseEntity<NoteId> createNewNote(@RequestHeader String user_token, @RequestBody Note note) throws SQLException {
         User user = new User(b64Decoder.b64Decoder(user_token));
-        if (dbConnector.addNewNote(user.getUsername(), note.getTitel(), note.getInhalt(), (java.sql.Date) new SimpleDateFormat("dd/MM/yyyy").parse(note.getDatum()), dbConnector.getStatement())) {
-            return ResponseEntity.status(201).build();
+        if (dbConnector.addNewNote(user.getUsername(), note.getTitel(), note.getInhalt(), note.getDatum(), dbConnector.getStatement())) {
+            NoteId noteId = dbConnector.getIdFromNewlyCreatedNote();
+            return ResponseEntity.status(200).body(noteId);
         } else return ResponseEntity.status(403).build();
     }
 
