@@ -168,11 +168,11 @@ public class Controller {
         } else return ResponseEntity.status(403).build();
     }
 
-
+    // Aus dem Frontend kommt ein Parameter <elemet_id> über diesen das entsprechende Dokument in der DB überschreiben.
     // Vorhandenen Eintrag überschreiben
     @RequestMapping(value = "/documents", method = RequestMethod.PUT)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<Null> patchExistingNote(@RequestParam String user_token, @RequestBody Note note) throws SQLException {
+    public ResponseEntity<Null> patchExistingNote(@RequestHeader String user_token, @RequestBody Note note) throws SQLException {
         // TODO: 07.04.2020 NICHT FERTIG UND FUNKTIONIERT NICHT RICHTIG!
         User user = new User(b64Decoder.b64Decoder(user_token));
         user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername(), dbConnector.getStatement()).get(1));

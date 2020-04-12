@@ -38,7 +38,7 @@ public class DBConnector {
         return statement;
     }
 
-    public DBConnector(String placeholder) throws SQLException {
+    public DBConnector(String placeholder) {
     }
 
     public DBConnector() throws SQLException {
@@ -67,7 +67,7 @@ public class DBConnector {
     public List<List<String>> loadAllTablesFromUser(int userId, Statement statement) throws SQLException {
         final List<List<String>> notesFromUserForReturnment = new ArrayList<>();
         final List<String> singleNoteFromUser = new ArrayList<>();
-        ResultSet resultSet = statement.executeQuery("select * from dokumententabelle where id='" + userId + "';");
+        ResultSet resultSet = statement.executeQuery("select * from dokumententabelle where eigentuemerid='" + userId + "';");
         while (resultSet.next()) {
             singleNoteFromUser.add(0, resultSet.getString("title"));
             singleNoteFromUser.add(1, resultSet.getString("inhalt"));
