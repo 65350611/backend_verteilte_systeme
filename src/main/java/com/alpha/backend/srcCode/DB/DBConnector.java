@@ -42,6 +42,9 @@ public class DBConnector {
     public DBConnector(String placeholder) {
     }
 
+    /**
+     * @throws SQLException
+     */
     public DBConnector() throws SQLException {
         try {
             this.connection = (Connection) DriverManager.getConnection("jdbc:mysql://165.22.78.137:3306/test?" + "user=root&password=thisProgramWllBeLit123");
@@ -54,6 +57,11 @@ public class DBConnector {
 
     }
 
+    /**
+     * @param username
+     * @return
+     * @throws SQLException
+     */
     public List loadUserFromDatabase(String username) throws SQLException {
         final List resultForReturn = new ArrayList();
         Statement st = connection.createStatement();
@@ -66,7 +74,11 @@ public class DBConnector {
         return resultForReturn;
     }
 
-
+    /**
+     * @param userId
+     * @return
+     * @throws SQLException
+     */
     public List<List<String>> loadAllTablesFromUser(int userId) throws SQLException {
         final List<List<String>> notesFromUserForReturnment = new ArrayList<>();
         Statement st = connection.createStatement();
@@ -86,14 +98,24 @@ public class DBConnector {
         return notesFromUserForReturnment;
     }
 
-
+    /**
+     * @param elementId
+     * @param ownerId
+     * @throws SQLException
+     */
     public void deleteNote(String elementId, int ownerId) throws SQLException {
         Statement st = connection.createStatement();
         st.addBatch("delete from dokumententabelle where id='" + elementId + "' and eigentuemerid='" + ownerId + "';");
         st.executeBatch();
     }
 
-
+    /**
+     * @param username
+     * @param password
+     * @param email
+     * @return
+     * @throws SQLException
+     */
     public boolean addNewUser(String username, String password, String email) throws SQLException {
         Statement st = connection.createStatement();
         st.addBatch("INSERT INTO usertabelle (nutzername, passwort, email) VALUES ('" + username + "','" + password + "','" + email + "')");
@@ -101,6 +123,11 @@ public class DBConnector {
         return checkIfNewUserWasCreated(username);
     }
 
+    /**
+     * @param username
+     * @return
+     * @throws SQLException
+     */
     private boolean checkIfNewUserWasCreated(String username) throws SQLException {
         Statement st = connection.createStatement();
         ResultSet rs = st.executeQuery("select nutzername from usertabelle where nutzername='" + username + "';");
@@ -114,15 +141,28 @@ public class DBConnector {
         } else return false;
     }
 
+    /**
+     * @param username
+     * @param title
+     * @param content
+     * @param date
+     * @return
+     * @throws SQLException
+     */
     public boolean addNewNote(String username, String title, String content, String date) throws SQLException {
         Statement st = connection.createStatement();
         st.addBatch("INSERT INTO dokumententabelle (title, datum, inhalt, eigentuemerid) VALUES('" + title + "','" + date + "','" + content +
                 "','" + loadUserFromDatabase(username).get(1) + "')");
         st.executeBatch();
-        return checkIfNewNoteWasSaved(title);
+        return checkIfNoteWasSaved(title);
     }
 
-    private boolean checkIfNewNoteWasSaved(String title) throws SQLException {
+    /**
+     * @param title
+     * @return
+     * @throws SQLException
+     */
+    private boolean checkIfNoteWasSaved(String title) throws SQLException {
         Statement st = connection.createStatement();
 
         ResultSet rs = st.executeQuery("select title from dokumententabelle where title='" + title + "';");
@@ -135,6 +175,10 @@ public class DBConnector {
         } else return false;
     }
 
+    /**
+     * @return
+     * @throws SQLException
+     */
     public NoteId getIdFromNewlyCreatedNote() throws SQLException {
         Statement st = connection.createStatement();
         Integer noteId = 0;
@@ -148,6 +192,12 @@ public class DBConnector {
         return id;
     }
 
+    /**
+     * @param userId
+     * @param element_id
+     * @return
+     * @throws SQLException
+     */
     public Note getContentFromExistingNote(int userId, String element_id) throws SQLException {
         Statement st = connection.createStatement();
         ResultSet rs = st.executeQuery("select * from dokumententabelle where eigentuemerid='" + userId + "' and id='" + element_id + "';");
@@ -157,8 +207,21 @@ public class DBConnector {
         return null;
     }
 
-//    public boolean updateExistingResource(String username, String title, String content, String date) {
-//        Statement st = connection.createStatement();
-//        st.addBatch("update dokumententabelle where ");
-//    }
+    /**
+     * @param userId
+     * @param title
+     * @param content
+     * @param element_id
+     * @return
+     * @throws SQLException
+     */
+    public boolean updateExistingResource(int userId, String title, String content, String element_id) throws SQLException {
+        Statement st = connection.createStatement();
+        st.addBatch("update dokumententabelle set title='" + title + "'," + " inhalt='" + content + "' where id='" + element_id + "';");
+        st.executeBatch();
+        if (checkIfNoteWasSaved(title)) {
+            return true;
+        } else return false;
+
+    }
 }
