@@ -151,13 +151,13 @@ public class Controller {
     // DELETE Eintrag von User
     @RequestMapping(value = "/documents", method = RequestMethod.DELETE)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<Null> deleteResponseEntity(@RequestHeader String user_token, @RequestParam int eintrag_id) throws SQLException {
+    public ResponseEntity<Null> deleteResponseEntity(@RequestHeader String user_token, @RequestParam String eintrag_id) throws SQLException {
         // TODO: 07.04.2020 NICHT FERTIG UND FUNKTIONIERT NICHT RICHTIG!
         User user = new User(b64Decoder.b64Decoder(user_token));
         user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername()).get(1));
         //Durch diese Abfrage wird sichergestellt, dass der user_token valide ist.
         if (dbConnector.loadUserFromDatabase(user.getUsername()).get(1) != null) {
-            dbConnector.deleteNote(eintrag_id);
+            dbConnector.deleteNote(eintrag_id, user.getUserId());
         }
         return ResponseEntity.status(204).build();
 
@@ -176,16 +176,18 @@ public class Controller {
 
     // Aus dem Frontend kommt ein Parameter <elemet_id> über diesen das entsprechende Dokument in der DB überschreiben.
     // Vorhandenen Eintrag überschreiben
-    @RequestMapping(value = "/documents", method = RequestMethod.PUT)
-    @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<Null> patchExistingNote(@RequestHeader String user_token, @RequestBody Note note) throws SQLException {
-        // TODO: 07.04.2020 NICHT FERTIG UND FUNKTIONIERT NICHT RICHTIG!
-        User user = new User(b64Decoder.b64Decoder(user_token));
-        user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername()).get(1));
-        dbConnector.deleteNote(user.getUserId());
-        // TODO: 03.04.2020  DB.patchExistingNode(user, note);
-        return ResponseEntity.status(204).build();
-    }
+//    @RequestMapping(value = "/documents", method = RequestMethod.PUT)
+//    @CrossOrigin(origins = "*", allowedHeaders = "*")
+//    public ResponseEntity<Null> patchExistingNote(@RequestHeader String user_token, @RequestBody Note note) throws SQLException {
+//        // TODO: 07.04.2020 NICHT FERTIG UND FUNKTIONIERT NICHT RICHTIG!
+//        User user = new User(b64Decoder.b64Decoder(user_token));
+//        user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername()).get(1));
+//        // TODO: 03.04.2020  DB.patchExistingNode(user, note);
+//        if(dbConnector.updateExistingResource()){
+//
+//        }
+//        return ResponseEntity.status(204).build();
+//    }
 
     // Inhalt von vorhandenem Eintrag ans Frontend liefern
     @RequestMapping(value = "/document", method = RequestMethod.GET)

@@ -87,9 +87,9 @@ public class DBConnector {
     }
 
 
-    public void deleteNote(int eintrag_id) throws SQLException {
+    public void deleteNote(String elementId, int ownerId) throws SQLException {
         Statement st = connection.createStatement();
-        st.addBatch("delete from dokumententabelle where id='" + eintrag_id + "';");
+        st.addBatch("delete from dokumententabelle where id='" + elementId + "' and eigentuemerid='" + ownerId + "';");
         st.executeBatch();
     }
 
@@ -151,9 +151,14 @@ public class DBConnector {
     public Note getContentFromExistingNote(int userId, String element_id) throws SQLException {
         Statement st = connection.createStatement();
         ResultSet rs = st.executeQuery("select * from dokumententabelle where eigentuemerid='" + userId + "' and id='" + element_id + "';");
-        if (rs.next()){
-            return new Note(rs.getString("datum"), rs.getString("title"),rs.getString("inhalt"), rs.getString("id"));
+        if (rs.next()) {
+            return new Note(rs.getString("datum"), rs.getString("title"), rs.getString("inhalt"), rs.getString("id"));
         }
         return null;
     }
+
+//    public boolean updateExistingResource(String username, String title, String content, String date) {
+//        Statement st = connection.createStatement();
+//        st.addBatch("update dokumententabelle where ");
+//    }
 }
