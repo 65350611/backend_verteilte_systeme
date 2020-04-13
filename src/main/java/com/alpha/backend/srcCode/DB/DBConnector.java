@@ -158,19 +158,19 @@ public class DBConnector {
     }
 
     /**
-     * @param title
+     * @param newTitle
      * @return
      * @throws SQLException
      */
-    private boolean checkIfNoteWasSaved(String title) throws SQLException {
+    private boolean checkIfNoteWasSaved(String newTitle) throws SQLException {
         Statement st = connection.createStatement();
 
-        ResultSet rs = st.executeQuery("select title from dokumententabelle where title='" + title + "';");
+        ResultSet rs = st.executeQuery("select title from dokumententabelle where title='" + newTitle + "';");
         String titel = "";
         if (rs.next()) {
             titel = rs.getString("title");
         }
-        if (titel.contentEquals(title)) {
+        if (titel.contentEquals(newTitle)) {
             return true;
         } else return false;
     }
@@ -209,17 +209,17 @@ public class DBConnector {
 
     /**
      * @param userId
-     * @param title
+     * @param newTitle
      * @param content
      * @param element_id
      * @return
      * @throws SQLException
      */
-    public boolean updateExistingResource(int userId, String title, String content, String element_id) throws SQLException {
+    public boolean updateExistingResource(int userId, String newTitle, String content, String element_id) throws SQLException {
         Statement st = connection.createStatement();
-        st.addBatch("update dokumententabelle set title='" + title + "'," + " inhalt='" + content + "' where id='" + element_id + "';");
+        st.addBatch("update dokumententabelle set title='" + newTitle + "'," + " inhalt='" + content + "' where id='" + element_id + "' and eigentuemerid='" + userId + "';");
         st.executeBatch();
-        if (checkIfNoteWasSaved(title)) {
+        if (checkIfNoteWasSaved(newTitle)) {
             return true;
         } else return false;
 

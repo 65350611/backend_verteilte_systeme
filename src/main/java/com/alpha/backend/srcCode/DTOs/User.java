@@ -52,6 +52,10 @@ public class User {
         this.email = email;
     }
 
+    /**
+     *
+     * @return String username
+     */
     public String getUsername() {
         return username;
     }

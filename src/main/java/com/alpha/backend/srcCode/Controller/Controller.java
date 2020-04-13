@@ -56,9 +56,6 @@ public class Controller {
     @Qualifier("DBConnector")
     DBConnector dbConnector = new DBConnector();
 
-
-    List<User> userList = new ArrayList<>();
-
     public Controller() throws SQLException {
     }
 
@@ -68,20 +65,6 @@ public class Controller {
         return "Hello!!!";
     }
 
-    @RequestMapping(value = "/user", method = RequestMethod.POST)
-    public String createUser(@RequestBody User user) {
-
-        userList.add(user);
-        return user.toString();
-    }
-
-    @RequestMapping("/returnuser")
-    public String returnuser() {
-        String forReturn = ".";
-        forReturn = forReturn + userList.get(0);
-        userList.remove(0);
-        return forReturn;
-    }
 
 //    Hier beginnt der spaßige Teil.
 //    gibt standardmäßig ein Json zurück
@@ -132,11 +115,6 @@ public class Controller {
         user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername()).get(1));
         List<Note> notes = new ArrayList<>();
         List<List<String>> documents = dbConnector.loadAllTablesFromUser(user.getUserId());
-//        System.out.println("Einträge");
-//        System.out.println(documents.get(0).get(1));
-//        System.out.println(documents.get(1).get(1));
-//        System.out.println(documents.get(2).get(1));
-//        System.out.println("Letzer Eintrag durch");
         for (List<String> notesFromTheDatabase : documents) {
             notes.add(new Note(notesFromTheDatabase.get(0), notesFromTheDatabase.get(1), notesFromTheDatabase.get(2)));
         }
@@ -148,11 +126,10 @@ public class Controller {
         return ResponseEntity.status(200).body(notes);
     }
 
-    // DELETE Eintrag von User
+    // DELETE Eintrag von User CHECKED
     @RequestMapping(value = "/documents", method = RequestMethod.DELETE)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<Null> deleteResponseEntity(@RequestHeader String user_token, @RequestParam String eintrag_id) throws SQLException {
-        // TODO: 07.04.2020 NICHT FERTIG UND FUNKTIONIERT NICHT RICHTIG!
         User user = new User(b64Decoder.b64Decoder(user_token));
         user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername()).get(1));
         //Durch diese Abfrage wird sichergestellt, dass der user_token valide ist.
@@ -163,7 +140,7 @@ public class Controller {
 
     }
 
-    // Neuen Eintrag Speichern.
+    // Neuen Eintrag Speichern. CHECKED
     @RequestMapping(value = "/documents", method = RequestMethod.POST)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<NoteId> createNewNote(@RequestHeader String user_token, @RequestBody Note note) throws SQLException {
@@ -182,13 +159,12 @@ public class Controller {
         // TODO: 07.04.2020 NICHT FERTIG UND FUNKTIONIERT NICHT RICHTIG!
         User user = new User(b64Decoder.b64Decoder(user_token));
         user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername()).get(1));
-        // TODO: 03.04.2020  DB.patchExistingNode(user, note);
         if (dbConnector.updateExistingResource(user.getUserId(), note.getTitel(), note.getInhalt(), element_id)) {
             return ResponseEntity.status(204).build();
         } else return ResponseEntity.status(400).build();
     }
 
-    // Inhalt von vorhandenem Eintrag ans Frontend liefern
+    // Inhalt von vorhandenem Eintrag ans Frontend liefern CHECKED
     @RequestMapping(value = "/document", method = RequestMethod.GET)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<Note> getContentFromExistingNote(@RequestHeader String user_token, @RequestParam String element_id) throws SQLException {
