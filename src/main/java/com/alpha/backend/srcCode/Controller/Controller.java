@@ -90,12 +90,6 @@ public class Controller {
             return ResponseEntity.status(200).body(password);
         } else return ResponseEntity.status(403).body(null);
 
-//        if (username.contentEquals("Testuser") && email.contentEquals("Testmail@test.de")) {
-//            // String pwd = "Hier sollte eigentlich aus der DB das korrekte Passwort geholt werden und weiterverschickt werden.";
-//            Password password = new Password("start123");
-//
-//            return ResponseEntity.status(200).body(password);
-//        } else return ResponseEntity.status(403).body(null);
     }
 
     // Registrieren CHECKED
