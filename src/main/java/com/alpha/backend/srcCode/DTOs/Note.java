@@ -14,6 +14,7 @@ package com.alpha.backend.srcCode.DTOs;
  * the License.
  *********************************************************************************
  */
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -24,14 +25,22 @@ public class Note {
     private String titel;
     private String datum;
     private String inhalt;
+    private String id;
 
     public Note() {
     }
 
-    public Note(String titel, String inhalt, String datum) {
+    public Note(String titel, String id, String datum) {
         this.titel = titel;
         this.datum = datum;
+        this.id = id;
+    }
+
+    public Note(String datum, String titel, String inhalt, String id) {
+        this.datum = datum;
+        this.titel = titel;
         this.inhalt = inhalt;
+        this.id = id;
     }
 
 
@@ -59,6 +68,12 @@ public class Note {
         this.inhalt = inhalt;
     }
 
+    public String getId() {
+        return id;
+    }
 
+    public void setId(String id) {
+        this.id = id;
+    }
 }
 

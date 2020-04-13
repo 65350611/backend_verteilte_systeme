@@ -91,7 +91,7 @@ public class Controller {
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<UserToken> userTokenResponseEntity(@RequestParam String username, @RequestParam String password) throws SQLException {
 
-        if (dbConnector.loadUserFromDatabase(username, dbConnector.getStatement()).get(0).toString().contentEquals(password)) {
+        if (dbConnector.loadUserFromDatabase(username).get(0).toString().contentEquals(password)) {
             return ResponseEntity.status(200).body(userTokenCreator.createUserToken(username));
         } else return ResponseEntity.status(403).body(null);
     }
@@ -102,8 +102,8 @@ public class Controller {
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<Password> forgetPassword(@RequestParam String username, @RequestParam String email) throws SQLException {
 
-        if (dbConnector.loadUserFromDatabase(username, dbConnector.getStatement()).get(2).toString().contentEquals(email)) {
-            Password password = new Password(dbConnector.loadUserFromDatabase(username, dbConnector.getStatement()).get(0).toString());
+        if (dbConnector.loadUserFromDatabase(username).get(2).toString().contentEquals(email)) {
+            Password password = new Password(dbConnector.loadUserFromDatabase(username).get(0).toString());
             return ResponseEntity.status(200).body(password);
         } else return ResponseEntity.status(403).body(null);
 
@@ -119,7 +119,7 @@ public class Controller {
     @RequestMapping(value = "/users", method = RequestMethod.POST)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<Null> registrateResponseEntity(@RequestBody User user) throws SQLException {
-        if (dbConnector.addNewUser(user.getUsername(), user.getPassword(), user.getEmail(), dbConnector.getStatement())) {
+        if (dbConnector.addNewUser(user.getUsername(), user.getPassword(), user.getEmail())) {
             return ResponseEntity.status(201).build();
         } else return ResponseEntity.status(422).build();
     }
@@ -129,29 +129,35 @@ public class Controller {
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<List<Note>> noteResponseEntity(@RequestHeader String user_token) throws SQLException {
         User user = new User(b64Decoder.b64Decoder(user_token));
-        user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername(), dbConnector.getStatement()).get(1));
+        user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername()).get(1));
         List<Note> notes = new ArrayList<>();
-
-        List<List<String>> documents = dbConnector.loadAllTablesFromUser(user.getUserId(), dbConnector.getStatement());
-//        for (List<String> notesFromTheDatabase : documents) {
-//            notes.add(new Note(notesFromTheDatabase.get(0), notesFromTheDatabase.get(1), notesFromTheDatabase.get(2)));
-//        }
+        List<List<String>> documents = dbConnector.loadAllTablesFromUser(user.getUserId());
+//        System.out.println("Einträge");
+//        System.out.println(documents.get(0).get(1));
+//        System.out.println(documents.get(1).get(1));
+//        System.out.println(documents.get(2).get(1));
+//        System.out.println("Letzer Eintrag durch");
+        for (List<String> notesFromTheDatabase : documents) {
+            notes.add(new Note(notesFromTheDatabase.get(0), notesFromTheDatabase.get(1), notesFromTheDatabase.get(2)));
+        }
         // TODO: 07.04.2020 FALLS DIE FOREACH NICHT FUNKTIONIERT DIE FOR SCHLEIFE VERWENDEN!
 
-        for (int i = 0; i < documents.size(); i++) {
-            notes.add(new Note(documents.get(i).get(0), documents.get(i).get(1), documents.get(i).get(2)));
-        }
+//        for (int i = 0; i < documents.size(); i++) {
+//            notes.add(new Note(documents.get(i).get(0), documents.get(i).get(1), documents.get(i).get(2)));
+//        }
         return ResponseEntity.status(200).body(notes);
     }
 
     // DELETE Eintrag von User
     @RequestMapping(value = "/documents", method = RequestMethod.DELETE)
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<Null> deleteResponseEntity(@RequestParam String user_token, @RequestParam int eintrag_id) throws SQLException {
+    public ResponseEntity<Null> deleteResponseEntity(@RequestHeader String user_token, @RequestParam int eintrag_id) throws SQLException {
         // TODO: 07.04.2020 NICHT FERTIG UND FUNKTIONIERT NICHT RICHTIG!
         User user = new User(b64Decoder.b64Decoder(user_token));
-        if (dbConnector.loadUserFromDatabase(user.getUsername(), dbConnector.getStatement()).get(1) != null) {
-            dbConnector.deleteNote(eintrag_id, dbConnector.getStatement());
+        user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername()).get(1));
+        //Durch diese Abfrage wird sichergestellt, dass der user_token valide ist.
+        if (dbConnector.loadUserFromDatabase(user.getUsername()).get(1) != null) {
+            dbConnector.deleteNote(eintrag_id);
         }
         return ResponseEntity.status(204).build();
 
@@ -162,7 +168,7 @@ public class Controller {
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<NoteId> createNewNote(@RequestHeader String user_token, @RequestBody Note note) throws SQLException {
         User user = new User(b64Decoder.b64Decoder(user_token));
-        if (dbConnector.addNewNote(user.getUsername(), note.getTitel(), note.getInhalt(), note.getDatum(), dbConnector.getStatement())) {
+        if (dbConnector.addNewNote(user.getUsername(), note.getTitel(), note.getInhalt(), note.getDatum())) {
             NoteId noteId = dbConnector.getIdFromNewlyCreatedNote();
             return ResponseEntity.status(200).body(noteId);
         } else return ResponseEntity.status(403).build();
@@ -175,10 +181,22 @@ public class Controller {
     public ResponseEntity<Null> patchExistingNote(@RequestHeader String user_token, @RequestBody Note note) throws SQLException {
         // TODO: 07.04.2020 NICHT FERTIG UND FUNKTIONIERT NICHT RICHTIG!
         User user = new User(b64Decoder.b64Decoder(user_token));
-        user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername(), dbConnector.getStatement()).get(1));
-        dbConnector.deleteNote(user.getUserId(), dbConnector.getStatement());
+        user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername()).get(1));
+        dbConnector.deleteNote(user.getUserId());
         // TODO: 03.04.2020  DB.patchExistingNode(user, note);
         return ResponseEntity.status(204).build();
+    }
+
+    // Inhalt von vorhandenem Eintrag ans Frontend liefern
+    @RequestMapping(value = "/document", method = RequestMethod.GET)
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    public ResponseEntity<Note> getContentFromExistingNote(@RequestHeader String user_token, @RequestParam String element_id) throws SQLException {
+        User user = new User(b64Decoder.b64Decoder(user_token));
+        user.setUserId((Integer) dbConnector.loadUserFromDatabase(user.getUsername()).get(1));
+        Note noteFromDatabase = dbConnector.getContentFromExistingNote(user.getUserId(), element_id);
+        if (noteFromDatabase != null) {
+            return ResponseEntity.status(200).body(noteFromDatabase);
+        } else return ResponseEntity.status(404).build();
     }
 
 

@@ -15,6 +15,7 @@ package com.alpha.backend.srcCode.DB;
  *********************************************************************************
  */
 
+import com.alpha.backend.srcCode.DTOs.Note;
 import com.alpha.backend.srcCode.DTOs.NoteId;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -53,9 +54,10 @@ public class DBConnector {
 
     }
 
-    public List loadUserFromDatabase(String username, Statement statement) throws SQLException {
+    public List loadUserFromDatabase(String username) throws SQLException {
         final List resultForReturn = new ArrayList();
-        ResultSet resultSet = statement.executeQuery("select * from usertabelle where nutzername='" + username + "';");
+        Statement st = connection.createStatement();
+        ResultSet resultSet = st.executeQuery("select * from usertabelle where nutzername='" + username + "';");
         while (resultSet.next()) {
             resultForReturn.add(resultSet.getString("passwort"));
             resultForReturn.add(resultSet.getInt("id"));
@@ -64,37 +66,38 @@ public class DBConnector {
         return resultForReturn;
     }
 
-    public List<List<String>> loadAllTablesFromUser(int userId, Statement statement) throws SQLException {
+
+    public List<List<String>> loadAllTablesFromUser(int userId) throws SQLException {
         final List<List<String>> notesFromUserForReturnment = new ArrayList<>();
-        final List<String> singleNoteFromUser = new ArrayList<>();
-        ResultSet resultSet = statement.executeQuery("select * from dokumententabelle where eigentuemerid='" + userId + "';");
+        Statement st = connection.createStatement();
+        ResultSet resultSet = st.executeQuery("select * from dokumententabelle where eigentuemerid='" + userId + "';");
+        int i = 0;
         while (resultSet.next()) {
+            List<String> singleNoteFromUser = new ArrayList<>();
+
             singleNoteFromUser.add(0, resultSet.getString("title"));
-            singleNoteFromUser.add(1, resultSet.getString("inhalt"));
+            singleNoteFromUser.add(1, resultSet.getString("id"));
             singleNoteFromUser.add(2, resultSet.getString("datum"));
 
-//            //
-//            Date date = resultSet.getDate("datum");
-//            DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-//            String datumDesEintrags = dateFormat.format(date);
-//            singleNoteFromUser.add(2, datumDesEintrags);
-//            //
             notesFromUserForReturnment.add(singleNoteFromUser);
+
+
         }
         return notesFromUserForReturnment;
     }
 
 
-    public void deleteNote(int eintrag_id, Statement statement) throws SQLException {
-        statement.addBatch("DELETE * FROM dokumententabelle WHERE eigentuemerid='" + eintrag_id + "';");
-        statement.executeBatch();
+    public void deleteNote(int eintrag_id) throws SQLException {
+        Statement st = connection.createStatement();
+        st.addBatch("delete from dokumententabelle where id='" + eintrag_id + "';");
+        st.executeBatch();
     }
 
 
-    public boolean addNewUser(String username, String password, String email, Statement statement) throws SQLException {
-
-        statement.addBatch("INSERT INTO usertabelle (nutzername, passwort, email) VALUES ('" + username + "','" + password + "','" + email + "')");
-        statement.executeBatch();
+    public boolean addNewUser(String username, String password, String email) throws SQLException {
+        Statement st = connection.createStatement();
+        st.addBatch("INSERT INTO usertabelle (nutzername, passwort, email) VALUES ('" + username + "','" + password + "','" + email + "')");
+        st.executeBatch();
         return checkIfNewUserWasCreated(username);
     }
 
@@ -111,10 +114,11 @@ public class DBConnector {
         } else return false;
     }
 
-    public boolean addNewNote(String username, String title, String content, String date, Statement statement) throws SQLException {
-        statement.addBatch("INSERT INTO dokumententabelle (title, datum, inhalt, eigentuemerid) VALUES('" + title + "','" + date + "','" + content +
-                "','" + loadUserFromDatabase(username, statement).get(1) + "')");
-        statement.executeBatch();
+    public boolean addNewNote(String username, String title, String content, String date) throws SQLException {
+        Statement st = connection.createStatement();
+        st.addBatch("INSERT INTO dokumententabelle (title, datum, inhalt, eigentuemerid) VALUES('" + title + "','" + date + "','" + content +
+                "','" + loadUserFromDatabase(username).get(1) + "')");
+        st.executeBatch();
         return checkIfNewNoteWasSaved(title);
     }
 
@@ -130,11 +134,12 @@ public class DBConnector {
             return true;
         } else return false;
     }
+
     public NoteId getIdFromNewlyCreatedNote() throws SQLException {
         Statement st = connection.createStatement();
         Integer noteId = 0;
         ResultSet rs = st.executeQuery("select max(id) from dokumententabelle;");
-        if (rs.next()){
+        if (rs.next()) {
             noteId = rs.getInt("max(id)");
         }
         NoteId id = new NoteId();
@@ -143,4 +148,12 @@ public class DBConnector {
         return id;
     }
 
+    public Note getContentFromExistingNote(int userId, String element_id) throws SQLException {
+        Statement st = connection.createStatement();
+        ResultSet rs = st.executeQuery("select * from dokumententabelle where eigentuemerid='" + userId + "' and id='" + element_id + "';");
+        if (rs.next()){
+            return new Note(rs.getString("datum"), rs.getString("title"),rs.getString("inhalt"), rs.getString("id"));
+        }
+        return null;
+    }
 }
