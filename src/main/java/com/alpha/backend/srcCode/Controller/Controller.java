@@ -66,8 +66,7 @@ public class Controller {
     }
 
 
-//    Hier beginnt der spaßige Teil.
-//    gibt standardmäßig ein Json zurück
+
 
     // LOGIN CHECKED
     @RequestMapping(value = "/users/login", method = RequestMethod.GET)

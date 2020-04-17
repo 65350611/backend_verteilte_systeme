@@ -14,6 +14,7 @@ package com.alpha.backend;
  * the License.
  *********************************************************************************
  */
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
